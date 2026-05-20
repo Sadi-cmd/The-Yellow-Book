@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Yellow Book</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cormorant+Infant:ital,wght@0,300;1,300&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #1a1714;
+    --paper: #f4ede0;
+    --paper-dark: #ede3d0;
+    --faded: #8a7d6b;
+    --faded-light: #b5a898;
+    --accent: #c9a96e;
+    --accent-dim: #a88850;
+    --red-faint: #7a3b3b;
+    --line: rgba(138, 125, 107, 0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--ink);
+    color: var(--paper);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 19px;
+    line-height: 1.85;
+    overflow-x: hidden;
+  }
+
+  /* --- GRAIN OVERLAY --- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.6;
+  }
+
+  /* --- COVER --- */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 4rem 2rem;
+    background: radial-gradient(ellipse at 50% 60%, #2a211a 0%, #120e0a 70%, var(--ink) 100%);
+    overflow: hidden;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 160px;
+    background: linear-gradient(to bottom, transparent, var(--ink));
+    pointer-events: none;
+  }
+
+  .rain-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.18;
+  }
+
+  .cover-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 560px;
+  }
+
+  .cover-rule-top {
+    width: 1px;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    margin: 0 auto 2.5rem;
+    animation: fadeDown 2s ease forwards;
+    opacity: 0;
+  }
+
+  .cover-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 0.72rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--faded-light);
+    margin-bottom: 2rem;
+    animation: fadeUp 2s 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  .cover-title {
+    font-family: 'Cormorant Infant', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(3.2rem, 8vw, 5.5rem);
+    line-height: 1.05;
+    color: var(--paper);
+    letter-spacing: -0.01em;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 2s 0.6s ease forwards;
+    opacity: 0;
+  }
+
+  .cover-title .yellow-word {
+    color: var(--accent);
+  }
+
+  .cover-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--faded);
+    letter-spacing: 0.05em;
+    animation: fadeUp 2s 1s ease forwards;
+    opacity: 0;
+    line-height: 1.6;
+  }
+
+  .cover-rule-bottom {
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+    margin: 2.5rem auto 0;
+    animation: fadeUp 2s 1.3s ease forwards;
+    opacity: 0;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    animation: fadeUp 2s 2s ease forwards;
+    opacity: 0;
+    color: var(--faded);
+  }
+
+  .scroll-hint span {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  .scroll-hint::after {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--faded), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  /* --- MAIN CONTENT --- */
+  .story-wrapper {
+    background: var(--ink);
+    position: relative;
+  }
+
+  .section {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 5rem 2.5rem;
+    position: relative;
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* section with left gutter accent */
+  .section-with-rule {
+    padding-left: 3.5rem;
+  }
+
+  .section-with-rule::before {
+    content: '';
+    position: absolute;
+    left: 2rem;
+    top: 5rem;
+    bottom: 5rem;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--line) 20%, var(--line) 80%, transparent);
+  }
+
+  /* --- DIVIDERS --- */
+  .divider {
+    text-align: center;
+    color: var(--faded);
+    font-size: 0.85rem;
+    letter-spacing: 0.5em;
+    margin: 1rem auto;
+    padding: 2rem 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    max-width: 660px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  .divider.visible { opacity: 1; }
+
+  .divider::before, .divider::after {
+    content: '';
+    display: inline-block;
+    width: 40px;
+    height: 1px;
+    background: var(--line);
+    vertical-align: middle;
+    margin: 0 1rem;
+  }
+
+  /* --- SECTION LABELS --- */
+  .section-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--faded);
+    margin-bottom: 2rem;
+    display: block;
+  }
+
+  /* --- PARAGRAPHS --- */
+  p {
+    margin-bottom: 1.6rem;
+    color: #d8cfc4;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  em {
+    font-style: italic;
+    color: #e8ddd0;
+  }
+
+  strong {
+    font-weight: 500;
+    color: var(--paper);
+  }
+
+  /* --- THOUGHT TEXT --- */
+  .thought {
+    font-style: italic;
+    color: #c9bfb0;
+  }
+
+  /* --- DIALOGUE --- */
+  .dialogue-block {
+    padding: 0.1rem 0 0.1rem 1.5rem;
+    border-left: 2px solid var(--line);
+    margin: 1.8rem 0;
+  }
+
+  .dialogue-block p {
+    margin-bottom: 0.6rem;
+    font-style: italic;
+    color: #cfc4b4;
+  }
+
+  /* --- VOICEMAIL SECTION --- */
+  .voicemail-container {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(138, 125, 107, 0.2);
+    border-left: 3px solid var(--accent-dim);
+    padding: 2.5rem 2.5rem;
+    margin: 2.5rem 0;
+    position: relative;
+  }
+
+  .voicemail-container::before {
+    content: 'Voicemail · 1:43';
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+
+  .voicemail-container p {
+    font-style: italic;
+    color: #c0b5a4;
+    margin-bottom: 1.2rem;
+  }
+
+  .voicemail-container p:last-child { margin-bottom: 0; }
+
+  .voicemail-timer {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--faded);
+    text-align: right;
+    margin-top: 1.5rem;
+    display: block;
+  }
+
+  /* --- PULL QUOTE --- */
+  .pull-quote {
+    font-family: 'Cormorant Infant', serif;
+    font-style: italic;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    line-height: 1.5;
+    color: var(--paper);
+    text-align: center;
+    padding: 3rem 2rem;
+    position: relative;
+    max-width: 580px;
+    margin: 3rem auto;
+    opacity: 0;
+    transition: opacity 1s ease, transform 1s ease;
+    transform: translateY(20px);
+  }
+
+  .pull-quote.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .pull-quote::before, .pull-quote::after {
+    content: '';
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background: var(--accent);
+    margin: 1.2rem auto;
+  }
+
+  /* --- ENDING --- */
+  .ending {
+    padding-top: 4rem;
+    padding-bottom: 8rem;
+    text-align: center;
+  }
+
+  .ending .final-line {
+    font-family: 'Cormorant Infant', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--faded-light);
+    letter-spacing: 0.04em;
+    line-height: 2;
+  }
+
+  .title-reveal {
+    font-family: 'Cormorant Infant', serif;
+    font-style: italic;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--accent);
+    margin: 2rem 0;
+    display: block;
+  }
+
+  .ending-rule {
+    width: 60px;
+    height: 1px;
+    background: var(--faded);
+    margin: 3rem auto;
+  }
+
+  /* --- FOOTNOTE / CODA --- */
+  .coda {
+    background: rgba(20,15,10,0.6);
+    border-top: 1px solid var(--line);
+    padding: 4rem 2.5rem;
+    text-align: center;
+  }
+
+  .coda p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--faded);
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 2;
+  }
+
+  /* --- PROGRESS BAR --- */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 0%;
+    height: 2px;
+    background: linear-gradient(to right, var(--accent-dim), var(--accent));
+    z-index: 1000;
+    transition: width 0.1s linear;
+  }
+
+  /* --- KEYFRAMES --- */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes rainFall {
+    from { transform: translateY(-10px); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    to { transform: translateY(105vh); opacity: 0; }
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 640px) {
+    body { font-size: 17px; }
+    .section { padding: 3.5rem 1.5rem; }
+    .section-with-rule { padding-left: 1.5rem; }
+    .section-with-rule::before { display: none; }
+    .voicemail-container { padding: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<!-- COVER -->
+<section class="cover" id="cover">
+  <canvas class="rain-canvas" id="rainCanvas"></canvas>
+  <div class="cover-inner">
+    <div class="cover-rule-top"></div>
+    <div class="cover-label">a story about grief · and the things we carry</div>
+    <h1 class="cover-title">The <span class="yellow-word">Yellow</span> Book</h1>
+    <p class="cover-subtitle">
+      She did not know that he was memorizing her.<br/>
+      He had always done it, multiple times.
+    </p>
+    <div class="cover-rule-bottom"></div>
+  </div>
+  <div class="scroll-hint"><span>begin</span></div>
+</section>
+
+<!-- I. FEBRUARY -->
+<div class="divider" data-observe>— i —</div>
+
+<section class="section section-with-rule" data-observe>
+  <span class="section-label">February · coffee · morning light</span>
+
+  <p>The coffee was already done and at the table when she came out of the shower.</p>
+
+  <p>Jennifer didn't say anything about it. Neither did he. He was standing by just the window with his own cup, looking outside at the street, and she picked up her coffee mug and gave it a taste, and it was exactly right, the temperature, the amount of milk he had poured into it, the amount of sugar she had only told him about once — she had known him for exactly three years; some will probably just let that small detail slide.</p>
+
+  <p>But he didn't, just as she expected, in which she smiled, not caring about the fact that he wore an unknowing look at her, wondering what she was smiling for.</p>
+
+  <p>She stood just beside him at the window then and they drank their coffee while watching the street without talking to each other for a while. It was the most comfortable silence she had ever felt. She looked at him without him knowing, a thought coming right out of her: <em class="thought">"For the love of god, I'd marry this man a hundred times over."</em></p>
+
+  <div class="dialogue-block">
+    <p>"It's going to rain," he said.</p>
+    <p>Jennifer looked at the sky. "Probably," she replied.</p>
+    <p>He nodded in response.</p>
+  </div>
+
+  <p>She looked at his face for the second time — he held his cup, both of his hands around it even though it was already warm in the apartment, the line between his eyebrows that appears when he was thinking about something he wasn't planning to say out loud. She had even branded it in her mind, that line, without meaning to. She had actually kept a lot of things about him without meaning to.</p>
+
+  <p>She did not know then that he was thinking, <em class="thought">I want to remember this. Exactly this.</em> The morning light shining just right and the coffee and her wet hair from the shower. She did not know he was already memorizing her. He had always done it, multiple times.</p>
+
+  <p>She finished her coffee and put the cup in the sink and said she was going to be late, and he said okay, and she grabbed her bag and left, and the door closed behind her, and he stayed at the window with his cooling coffee and the grey sky pressing down outside and something unknown in his chest that he could not name — pressing down from the inside.</p>
+</section>
+
+<!-- II. APRIL RAIN -->
+<div class="divider" data-observe>— ii —</div>
+
+<section class="section section-with-rule" data-observe>
+  <span class="section-label">April · the yellow book · reading aloud</span>
+
+  <p>The rain started sometime before she woke up.</p>
+
+  <p>Jennifer became aware of it slowly. A ray of light pierced through the curtains, and that one light made the whole room feel like it existed outside of time. She even wondered if things could go on like this — quiet, cold yet warm at the same time. She loved this.</p>
+
+  <p>She lay still for a moment. The rain. The bright light. The weight of him beside her, still asleep, his arm loose around her waist, her hand just over her stomach, warm, his breathing slow and even.</p>
+
+  <p>She turned carefully so she wouldn't wake him and looked at him the way she rarely let herself look at him when he was awake — open, without his usual self-consciousness. He looked a little younger when he slept. The tension that had been bugging him during waking hours, something careful and guarded that she had never quite been able to pinpoint — it looked like everything weighing him down went away when he was sleeping and left behind someone who looked vulnerable. She noticed it and felt a tenderness so sudden it embarrassed her.</p>
+
+  <p>She went to the small shelf by the window and found the yellow book. She had been trying to get him to read it for three months already — leaving it in conspicuous places, reading passages aloud unprompted — and he had smiled and deflected every time in that way he had.</p>
+
+  <p>She climbed back into bed with it, settled on her stomach with her feet in the air, and opened to where she had left off.</p>
+
+  <p>She had read perhaps four pages when she felt him shift behind her.</p>
+
+  <div class="dialogue-block">
+    <p>"It's raining," he said. His voice was slow with sleep.</p>
+    <p>"I know."</p>
+    <p>"Is that the yellow book."</p>
+    <p>"It is."</p>
+    <p>"You're still reading that."</p>
+    <p>"I'm always reading it. It's very long." She turned a page without looking up. "You would know that if you read it yourself."</p>
+  </div>
+
+  <p>He made a sound that was almost a laugh. She felt him settle, and then she felt his eyes on her — that kind of attention he had that she had never quite been able to describe to anyone. Not staring. Not intrusive. It was more like being in a room with a fire. You were always aware of the warmth without having to look directly at it.</p>
+
+  <div class="dialogue-block">
+    <p>"Read it out loud," he said.</p>
+    <p>She looked up then. He was lying on his side watching her, his head on the pillow, and his expression was the one she had the most trouble with — open in a way he usually wasn't, something in his eyes so large it seemed to be pressing against the inside of him, looking for a way out.</p>
+    <p>"You want me to read it to you."</p>
+    <p>"I want to hear your voice," he said simply. "While it's raining."</p>
+  </div>
+
+  <p>She looked at him for a moment. Something tightened at her stomach, her chest tightening and her face burning.</p>
+
+  <p>"Okay," she said.</p>
+
+  <p>She went back to the beginning of the chapter so he would have the context and she read to him while the rain came down outside, neither of them checking the time. She read three chapters. He reached out and tucked a piece of her hair behind her ear in the second one without interrupting her and she just kept on reading like nothing had happened — even when her heart was fluttering on its own. He had done this before, and she had always felt like it was the first time.</p>
+
+  <p>Somewhere in the third chapter she glanced up and found him watching her with that expression again, the open one, the one she could never have understood — and he didn't look away and neither did she for a moment. Then she looked back down at the page.</p>
+
+  <p>She did not know then what he was thinking.</p>
+  <p>She did not know that he was thinking, <em class="thought">this is it. This exact thing. This is what I would want more of, spend the rest of my days of.</em></p>
+
+  <p>She did not know that he was memorizing her. The angle of her reading. The way her feet moved slightly when she encountered a sentence she liked. The sound of her voice in a grey-lit room while it rained. The shape of her face when she smiled. How she whined like a baby when she cried.</p>
+
+  <div class="dialogue-block">
+    <p>"Good?" she asked.</p>
+    <p>"Yeah," he said. His voice was quiet and a little rough. "Really really <em>really</em> good."</p>
+    <p>"I told you." she said.</p>
+    <p>"You told me." he agreed, smiling.</p>
+  </div>
+
+  <p>She lay down beside him and he put his arm around her and they listened to the rain for a while longer, not talking, not needing to. She thought, <em class="thought">I could do this forever.</em> She thought it easily and completely and without any idea of what forever meant or didn't mean.</p>
+
+  <p>Outside the rain kept on falling, soft and steady and completely indifferent to the things they weren't saying, and the morning held them both a little while longer.</p>
+</section>
+
+<div class="pull-quote" data-observe>
+  Outside the rain kept on falling, soft and steady and completely indifferent to the things they weren't saying.
+</div>
+
+<!-- III. TUESDAY -->
+<div class="divider" data-observe>— iii —</div>
+
+<section class="section section-with-rule" data-observe>
+  <span class="section-label">Tuesday · a shift · the first silence that was different</span>
+
+  <p>She noticed it first on Tuesday.</p>
+
+  <p>He was supposed to meet her at seven. He arrived at seven forty — he was late. He was never this late. She was always the one to arrive after him, and now it had been happening for god knows how long. He was slightly out of breath. He apologized, complete and sincere, but explained nothing. She had looked at him over the restaurant table and thought, <em class="thought">you were somewhere else again. You have been somewhere else for weeks.</em></p>
+
+  <p>She did not ask where. Her instincts told her not to.</p>
+
+  <p>The dinner was fine. He listened like he always listened to her — warm, asking about her week, remembering small things she had mentioned earlier. But there were sudden pauses. Silences that sat differently than the comfortable ones. Moments when she caught him looking at her with that expression — the one he made when he was sleeping, vulnerable. And then looking away too quickly, like he had been caught at something.</p>
+
+  <p>She reached across the table at one point and put her hand over his without much thought. He turned his hand over and held hers and looked at her with something she could not find an answer to — so carefully contained that she almost asked. She almost said, <em class="thought">What is it? You can tell me.</em></p>
+
+  <p>She didn't.</p>
+
+  <p>He squeezed her hand once before gently letting it go.</p>
+
+  <p>She would think about that later. How he did let go. How it had felt, in retrospect, less like an ending and more like leaving — like he was releasing something he had been holding for a long time, with great care, knowing it could not be kept. And it tightened her chest.</p>
+</section>
+
+<!-- IV. WEDNESDAY -->
+<div class="divider" data-observe>— iv —</div>
+
+<section class="section section-with-rule" data-observe>
+  <span class="section-label">Wednesday · nine in the evening · the end that wasn't indifference</span>
+
+  <p>They broke up. Wednesday, a little past nine in the evening.</p>
+
+  <p>There was no argument, no cups breaking around the house. Just her voice.</p>
+
+  <p>"I can't keep doing this," she said. "I don't know where you are when you're with me. But you're not there — it feels like you're not there even though you're there, it's like you're somewhere else and I can't help it. You haven't been here in months and I'm tired of pretending I don't notice."</p>
+
+  <p>He had looked at her for a long time. She had expected an argument, or an explanation, or at the very least sorry — just sorry, the only thing she wanted to hear, and then things would magically be okay. Instead he looked at her with that expression — the expression he wore while sleeping, when he looked years younger. For one moment she thought he was going to say it. Whatever it was. The thing she had been waiting months for him to say.</p>
+
+  <p>"Okay," he said. Just that.</p>
+
+  <p>She had taken his silence as confirmation. As indifference. She gathered what she needed and left and blocked his number from the Uber on the way home because she knew herself well enough to know that if she didn't do it immediately she would find a reason not to.</p>
+
+  <p>She cried once that night, and then she told herself it was the right thing.</p>
+
+  <p>She almost believed it.</p>
+
+  <p>She did not know that he sat for a long time after she left with his hands in his lap and his eyes on the door, and that he did not cry because he had made his peace with this — had been making his peace with this for months — and the peace was the most heartbreaking thing of all, the peace of someone who has accepted the only ending available to them and chosen to let the person they love walk through it without knowing.</p>
+
+  <p>She did not know any of that.</p>
+
+  <p>She woke up the next day. Made her own coffee. It was too cold. Too sweet. Too much milk. The wrong cup. The taste was never right. She was looking for something. Someone.</p>
+</section>
+
+<!-- V. THE CALL -->
+<div class="divider" data-observe>— v —</div>
+
+<section class="section section-with-rule" data-observe>
+  <span class="section-label">Thursday evening · the call · what she didn't know</span>
+
+  <p>His sister called on a Thursday evening.</p>
+
+  <p>Something about the hour made her pick up. Something about the way the phone kept on ringing.</p>
+
+  <p>"I need to tell you something," the sister said.</p>
+
+  <p>She sat down on the couch. Her body seemed to understand something before her mind did.</p>
+
+  <p>"He's been sick," his sister said. "He was sick the whole time you were together. Since he was seventeen, it came back about two years ago, a little before you met. He didn't want anyone outside the family to know. He made us all promise."</p>
+
+  <p>The room went very quiet. The silence was so loud. She didn't want to anticipate anymore of what his sister was going to say next. Oh, how she wished not to hear anything further.</p>
+
+  <p>"He passed this morning."</p>
+
+  <p>She heard the words. She understood them individually — her mind understood — but her heart and body couldn't. They did not assemble into meaning right away; they floated separately for a moment, each one distinct, and then they came together all at once and something in her chest gave way like a floorboard that had been weakening for a long time. And it finally, painfully, shattered her heart to pieces.</p>
+
+  <p>"I'm so sorry," his sister said. "I know he would've been furious with me for calling. But I thought you deserved to know. I thought you deserved to know that whatever you think happened between you — it wasn't you. It was never you."</p>
+
+  <p>A silence so long the sister said her name once, gently.</p>
+
+  <div class="dialogue-block">
+    <p>"Why didn't he tell me?" she finally said. Her voice was very small and very strange.</p>
+    <p>It wasn't a question. His sister understood that.</p>
+    <p>"He didn't want you to stay out of pity. He said he'd rather you left thinking he was cold or distant. He said watching you grieve someone who was still in the room would have been..." She stopped. "He said he loved you too much to do that to you."</p>
+  </div>
+
+  <p>She made a sound she had never made before. Something that wasn't quite a word and wasn't quite a breath. His sister said her name again and Jennifer just said <em>"I have to go"</em> barely above a whisper and ended the call and sat on the floor.</p>
+
+  <p>Her legs stopped being reliable and the cold floor was there.</p>
+
+  <p>She thought about the Tuesday in June. His hand turning over in hers. How he let go.</p>
+
+  <p>She unblocked his number.</p>
+
+  <p>The notification was still there. Ninety-three days old. She stared at it and her hands were not steady. She got her keys. She could not listen to it anywhere that had walls.</p>
+</section>
+
+<!-- VI. THE VOICEMAIL -->
+<div class="divider" data-observe>— vi —</div>
+
+<section class="section" data-observe>
+  <span class="section-label">The parking lot · orange light · ninety-three days old</span>
+
+  <p>She drove to a parking lot two streets over — a supermarket, closed at this hour, the lot mostly empty and orange under the streetlights. She parked in the far corner and turned the engine off and sat in the silence with the phone in both hands.</p>
+
+  <p>She pressed play.</p>
+
+  <div class="voicemail-container">
+    <p>Hey. I know you're not going to pick up. That's, yeah, that's okay. I just — I needed to say some things and I didn't want to say them over text because they felt too big for that, and I know that's probably not fair to you, calling like this after everything, but I'm going to say them anyway because I think I'll regret it if I don't. You know how I am with that.</p>
+
+    <p>I'm not calling to ask you to change your mind. I want you to know that first. This isn't that kind of call.</p>
+
+    <p>I keep thinking about the morning in April when it rained. We stayed in bed until almost noon and you were reading to me from that book you liked, the one with the yellow cover, the one you'd been trying to get me to read for months. And I remember looking at you — you were lying on your stomach with your feet in the air like you always did, and the light was that particular grey that comes with heavy rain, and you were reading and you kept stopping to look up and see if I was listening, and I was, I was always listening — and I thought, <em>this is it. This exact thing. This is what I would want more of if anyone ever asked me.</em> I didn't say it then. I should have said it then. I should have said it many times and I didn't.</p>
+
+    <p>I know I was distant. I know it felt like I was somewhere else. I know that hurt you, and I'm sorry for that — you deserved so much better than that. You deserved someone who showed up completely, every time, and I know I didn't always do that. I need you to know it was never because I didn't want to. It was never because I didn't care. It was the opposite of that. It was always the opposite of that.</p>
+
+    <p>I hope you find more April mornings. I mean that. I hope you find so many of them that you lose count. I hope you find someone who tells you in the moment, while it's happening, how much it means. Don't let anyone make you feel like you're asking for too much when you ask for that. You're not. You were never asking for too much.</p>
+
+    <p>I'm sorry. For the things I said and the things I didn't say and all the things I should have said so much sooner. I was scared. That's the most honest thing I can tell you. I was scared and I was stupid and those two things together cost us a lot and I'm sorry for that too.</p>
+
+    <p>You were — you are — you're not just something. You were my everything. I hope you know that. I hope someone makes sure you know that.</p>
+
+    <p>Take care of yourself. Please. That's all I — just, please take care of yourself. I love you.</p>
+
+    <span class="voicemail-timer">1:43 · end of message</span>
+  </div>
+
+  <p>Then silence.</p>
+
+  <p>She did not move.</p>
+
+  <p>The breakdown didn't come right after. It came sudden and total, from somewhere so deep inside her she hadn't known the place existed, and it took everything with it on the way out. The sound that came out of her was not a sound she recognized as her own — raw and shapeless, bypassing every defense she had. Every careful wall she had built over ninety-three days of telling herself she was fine. Her hands flew to her mouth like she could hold it in and she could not hold any of it in, and she bent forward over the steering wheel and she wept in a way she had not wept since she was a child — without dignity, without restraint, without any part of her standing apart and observing.</p>
+
+  <p>She cried for the April morning. For the yellow book and the grey light and the way he had watched her read like she was saying something worth memorizing. She cried for every silence she had misread as coldness, every distance she had misunderstood as indifference. She cried for the coffee — always exactly right, every single morning — and how she had never once told him what it meant that he remembered.</p>
+
+  <p>She cried for the Tuesday in June. For his hand turning over in hers and the letting go, the careful and devastating letting go of someone releasing something precious because he had already decided he could not keep it. She had not understood it then. She understood now.</p>
+
+  <p>She cried until there was nothing left and then she sat in the wreckage of it, hollow and still, her forehead against the cold steering wheel. The parking lot was orange and quiet around her.</p>
+
+  <p>Then she straightened up. Looked down at the phone still warm in her palm. Thought about the April morning. The yellow book. The rain.</p>
+
+  <p>She had loved that about him. She had loved it so much and she had never told him so, and she would spend a very long time learning to live with that.</p>
+
+  <p>She pressed play again.</p>
+
+  <p>Just once more, she told herself. And pressed play anyway. And his voice filled the small dark space of the car — <em>hey, I know you're not going to pick up</em> — and she closed her eyes and let it in. All of it. Finally.</p>
+
+  <p>She did not delete the voicemail.</p>
+
+  <p>She drove home in the quiet and kept it — not because it was useful, but because it was true, because it was proof that something so real had existed, because on the nights when she needed to remember that she had once been loved with someone's whole and quietly heroic heart.</p>
+
+  <p>She knew where to find it.</p>
+</section>
+
+<!-- VII. YEARS LATER -->
+<div class="divider" data-observe>— vii —</div>
+
+<section class="section section-with-rule" data-observe>
+  <span class="section-label">Three years later · an old phone · two rings</span>
+
+  <p>She kept it for years.</p>
+
+  <p>She kept it through the grief that came in waves, through the months it softened into longing, through the ordinary days when she was, in fact, okay — more or less. She kept it until the night, three years later, when she was cleaning out an old phone and found it and sat down on the floor the way she had sat down on the floor before, and listened to it one more time, and then did something she had never done.</p>
+
+  <p>She had called his number.</p>
+
+  <p>Not expecting anything. Not thinking. Just needing to hear — she didn't know what. His voicemail greeting. His voice saying his own name. Something. Proof that he had existed in the form of a phone that once rang when he was alive to not answer it.</p>
+
+  <p>It had rung twice.</p>
+
+  <p>And then someone had picked up.</p>
+
+  <p>She had gone completely still.</p>
+
+  <p>"Hello?" said a voice. His voice. His exact voice, the particular register of it, the slight roughness — she was so sure of it she didn't know how to react.</p>
+
+  <p>She had not said anything.</p>
+
+  <p>"Hello, is someone there?"</p>
+
+  <p>She had hung up.</p>
+
+  <p>She had sat with the phone in both hands for a very long time, her heart going completely wrong in her chest, and she had told herself: <em>someone else has his number now. Networks reassign numbers. It happens all the time.</em> She had told herself that clearly and logically and she had almost believed it.</p>
+
+  <p>Almost.</p>
+
+  <p>She had never called again.</p>
+
+  <p>She had never told anyone.</p>
+</section>
+
+<!-- VIII. THE WRITING -->
+<div class="divider" data-observe>— viii —</div>
+
+<section class="section section-with-rule" data-observe>
+  <span class="section-label">The notebook · forty pages · the ending she lived</span>
+
+  <p>She wrote it down.</p>
+
+  <p>All of it. The February mornings with the coffee. The April rain and the yellow book. The Tuesday in June and the letting go. The Wednesday. The parking lot. The voicemail.</p>
+
+  <p>She wrote it down because she needed it to exist somewhere outside of her. Somewhere it could be held, could be kept, could mean something beyond the private wreckage of one person's chest.</p>
+
+  <p>She wrote until her hand ached. She wrote until the room was dark around her and she hadn't noticed. She wrote the way she always wrote when something was trying to get out — without stopping, without looking up, without letting herself think too hard about what she was doing or why.</p>
+
+  <p>And then she stopped.</p>
+
+  <p>Not because she had finished.</p>
+
+  <p>Because a hand had appeared on her shoulder.</p>
+
+  <p>Warm. Familiar. The weight of it that she had known for years now — that she had remembered and branded in her mind.</p>
+
+  <div class="dialogue-block">
+    <p>"Hey, love, baby, darling," he said. His voice. His exact voice, the slight roughness of it, the way it turned up at the end like a question. "It's past midnight. Come to bed."</p>
+  </div>
+
+  <p>She looked up.</p>
+
+  <p>The notebook was in her lap. Forty pages, maybe more, covered in her own handwriting — the story she had been building for months, the one she had told her editor was almost done, the one that had started as a small idea about grief and distance and the things people carry alone, and had become, without her entirely meaning it to, something much closer to the bone.</p>
+
+  <p>He was standing in the doorway in the dark, hair slightly disheveled from sleep, squinting against the desk lamp. He had brought her a glass of water without being asked. He set it on the desk beside her notebook without looking at what she had written — because he never looked without being invited to.</p>
+
+  <p>She stared at him for a moment.</p>
+
+  <p>"You okay?" he asked.</p>
+
+  <p>She thought about the woman in the notebook. The parking lot. The orange streetlights. The voicemail playing in a dark car at eleven at night, alone. Forty pages of a loneliness so complete and specific that she had felt it in her own chest while writing it — had cried twice, had stopped and walked around the apartment because some of it had gotten too close to something.</p>
+
+  <p>She thought about what it would cost to lose exactly this. This man. This doorway. This glass of water placed without being asked.</p>
+
+  <p>"Yeah," she said. Her voice came out slightly unsteady.</p>
+
+  <p>He noticed. He always noticed. He came over and crouched beside her chair and looked at her face with that expression she had spent months trying to write and had never quite gotten right — but this time it was the expression he wore when sleeping, and he also wore when he was not asleep.</p>
+
+  <div class="dialogue-block">
+    <p>"Bad writing night?" he asked.</p>
+    <p>"No," she said. "Good one. That's the problem."</p>
+  </div>
+
+  <p>He looked at her for a moment in that way he had — patient, unhurried, not filling the silence with anything it didn't need.</p>
+
+  <div class="dialogue-block">
+    <p>"It's the sad one," he said, no questions asked.</p>
+    <p>"It's the sad one," she confirmed.</p>
+  </div>
+
+  <p>He nodded slowly. Reached out and tucked a piece of hair behind her ear the way he sometimes did without thinking, without making anything of it. She felt something move through her chest — quiet and warm and a little aching — the feeling of being seen by someone that had nothing to do with how you looked.</p>
+
+  <p>She looked down at the notebook. At the woman in the parking lot. At the voicemail that played and played in the dark. At the two rings and the voice and the hanging up. At everything the woman in those forty pages had lost and carried and never set down.</p>
+
+  <p>She had built that woman carefully over months. Had given her the April morning, the yellow book, the coffee that was always exactly right. Had given her the grief that comes from loving someone who loved you back completely and quietly and at great cost to themselves. Had given her the most devastating thing she could imagine.</p>
+
+  <p>A love she hadn't known the full size of until it was gone.</p>
+</section>
+
+<!-- ENDING -->
+<div class="divider" data-observe>—</div>
+
+<section class="section ending" data-observe>
+  <p class="final-line">She wrote it down.</p>
+  <p class="final-line">At the top of the first page, carefully, she had written one word —</p>
+
+  <span class="title-reveal">"The Yellow Book"</span>
+
+  <div class="ending-rule"></div>
+
+  <p class="final-line">"Come to bed," he said again. Gently.</p>
+
+  <p style="max-width:520px; margin: 2rem auto; color: #b5a898; font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; line-height: 2;">She looked at him, this man, this doorway, this ordinary and irreplaceable fact of her life, and she thought: <em>I know how to write the ending now.</em> Not because she had figured out the plot. Because she was sitting in it.</p>
+
+  <p style="max-width:520px; margin: 2rem auto; color: #b5a898; font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; line-height: 2;">Because the ending was not the parking lot and the voicemail and the woman who hung up before she could speak. The ending was this — a desk lamp in a dark apartment, a glass of water placed without being asked, a hand on her shoulder, a voice saying <em>come to bed.</em></p>
+
+  <p style="max-width:520px; margin: 2rem auto; color: #b5a898; font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; line-height: 2;">The ending was knowing — really knowing, in the place where knowing costs something — how greatly it would cost something to lose it.</p>
+
+  <div class="ending-rule"></div>
+
+  <p style="max-width:520px; margin: 2rem auto; color: #8a7d6b; font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; line-height: 2; font-style: italic;">She stood up. She left the notebook on the desk. She took his hand the way she always took his hand and she held it a little tighter than usual and he let her without asking why — which was one of the thousand small reasons — and they walked down the hall together in the dark.</p>
+
+  <p style="max-width:520px; margin: 2rem auto; color: #6d6357; font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; line-height: 2; font-style: italic;">Behind her the desk lamp was still on. The notebook was still open. Forty pages of a woman in a parking lot at eleven at night, alone with a voicemail and a grief that had no bottom — the woman she had invented so she would never forget what she had.</p>
+
+  <div class="ending-rule"></div>
+
+  <p style="max-width:480px; margin: 2.5rem auto 0.5rem; color: #a89880; font-family: 'EB Garamond', serif; font-size: 1rem; line-height: 2.2;">She made a fictional cruelty as the only way to hold onto the truth, because the truth is too good, too ordinary, too easy to take for granted. The novel wasn't atonement for something she did.</p>
+
+  <p style="max-width:480px; margin: 0.5rem auto 2rem; color: var(--accent); font-family: 'Cormorant Infant', serif; font-style: italic; font-size: 1.3rem; line-height: 1.8;">It's a weapon she built against her own forgetting.</p>
+
+  <div class="ending-rule"></div>
+
+  <p style="max-width:480px; margin: 2rem auto 0.5rem; color: #6d6357; font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; letter-spacing: 0.05em; font-style: italic;">The woman in the parking lot was never real.</p>
+  <p style="max-width:480px; margin: 0 auto 3rem; color: var(--paper); font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; letter-spacing: 0.05em; font-style: italic;">The hand on the shoulder always was.</p>
+
+  <p style="color: var(--faded); font-family: 'Cormorant Garamond', serif; font-size: 0.9rem; font-style: italic; letter-spacing: 0.1em;">Outside, it had begun to rain.</p>
+</section>
+
+<!-- CODA -->
+<div class="coda">
+  <p>For all the things said in voicemails never meant to be kept.<br/>For all the coffees made exactly right,<br/>without a word about what it meant.</p>
+</div>
+
+<script>
+  // Rain canvas
+  const canvas = document.getElementById('rainCanvas');
+  const ctx = canvas.getContext('2d');
+  let drops = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initDrops() {
+    drops = [];
+    for (let i = 0; i < 80; i++) {
+      drops.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        len: Math.random() * 18 + 8,
+        speed: Math.random() * 2.5 + 1.5,
+        opacity: Math.random() * 0.4 + 0.1
+      });
+    }
+  }
+
+  function drawRain() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drops.forEach(d => {
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x - 1, d.y + d.len);
+      ctx.strokeStyle = `rgba(200, 190, 175, ${d.opacity})`;
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+      d.y += d.speed;
+      if (d.y > canvas.height) {
+        d.y = -d.len;
+        d.x = Math.random() * canvas.width;
+      }
+    });
+    requestAnimationFrame(drawRain);
+  }
+
+  resizeCanvas();
+  initDrops();
+  drawRain();
+  window.addEventListener('resize', () => { resizeCanvas(); initDrops(); });
+
+  // Progress bar
+  const progressBar = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+  });
+
+  // Intersection observer for reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('[data-observe]').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
